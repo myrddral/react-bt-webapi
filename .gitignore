@@ -1,3 +1,7 @@
+#Firebase
+.firebase*
+firebase*
+
 # Logs
 logs
 *.log

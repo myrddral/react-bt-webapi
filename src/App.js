@@ -56,7 +56,12 @@ const App = () => {
       return Promise.all([
         service
           .getCharacteristic(options.intermediateMeasurement)
-          .then((characteristic) => handleScaleMeasurement(characteristic)),
+          .then((characteristic) => {
+            //change settimeout for criteria, if known
+            setTimeout(() => {
+              handleScaleMeasurement(characteristic)
+            }, 2000);
+          }),
       ]);
     });
   }
@@ -69,30 +74,32 @@ const App = () => {
   // };
 
   function handleScaleMeasurement(characteristic) {
-    console.log(characteristic);
     console.log("Starting notifications for measurement...");
     return characteristic
       .startNotifications()
       .then((characteristic) => {
-        console.log("Adding event listener for measurement...");
-        characteristic.addEventListener(
-          "characteristicvaluechanged",
-          onCharacteristicValueChanged
-        );
+          console.log("Adding event listener for measurement...");
+          characteristic.addEventListener(
+            "characteristicvaluechanged",
+            onCharacteristicValueChanged
+          );
       })
       .catch((error) => console.error(error));
   }
 
   const onCharacteristicValueChanged = (event) => {
-    console.log(`READING: ${event.target.value.getUint8(0)}`);
-    setReading(event.target.value.getUint8(0));
+    let weight = event.target.value.getUint8(1);
+    weight |= (event.target.value.getUint8(2) << 8);
+    weight |= (event.target.value.getUint8(3) << 16);
+
+    setReading(weight);
   };
 
   return (
     <>
       <center style={{ paddingTop: 50 }}>
         <p>{isConnected ? "CONNECTED" : "NOT CONNECTED"}</p>
-        <h2>{reading ? { reading } : "No reading yet"}</h2>
+        <h1>{reading ?  `${reading} g`  : "0 g"}</h1>
         {!isConnected && (
           <button onClick={connectToScale}>CONNECT TO SCALE</button>
         )}
